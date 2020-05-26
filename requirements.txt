@@ -7,8 +7,11 @@ colorama==0.4.3
 contextlib2==0.6.0
 distlib==0.3.0
 distro==1.4.0
+dnspython==1.16.0
+eventlet==0.25.2
 Flask==1.1.2
 Flask-SocketIO==4.3.0
+greenlet==0.4.15
 html5lib==1.0.1
 idna==2.8
 ipaddr==2.2.0
@@ -16,6 +19,7 @@ itsdangerous==1.1.0
 Jinja2==2.11.2
 lockfile==0.12.2
 MarkupSafe==1.1.1
+monotonic==1.5
 msgpack==0.6.2
 packaging==20.3
 pep517==0.8.2
