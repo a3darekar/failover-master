@@ -28,30 +28,44 @@ def find_neighbors(NODE_ID, inactive_node):
 	active_neighbors = []
 	for neighbor in neighbors:
 		if int(neighbor) in userlist:
-			print("neighbor "+ neighbor + "is active")
 			neighbor_node = userlist[int(neighbor)]
-			if neighbor_node['secondary_ip']:
-				print(neighbor_node['secondary_ip'])
-				print("neighbor "+ neighbor + " unable to recover")
-			else:
+			if not neighbor_node['secondary_ip']:
 				active_neighbors.append(neighbor)
 	if active_neighbors:
 		print(TGREEN + "Found neighbors :")
 		for neighbor in active_neighbors:
 			print(neighbor, end=' ')
-		print("\n\n", ENDC)
+		print(ENDC)
 		elected_id = active_neighbors[0]
 		elected_node = userlist.get(int(elected_id))
 		print("Assigning " + elected_id + " for recovery")
 		room = elected_node['sid']
-		emit("recover", {'recovery_node': NODE_ID, 'ip':inactive_node['primary_ip']}, room=room, callback=update_node)
+		emit("recover", {'disconnected_node': NODE_ID, 'recovery_node': elected_id, 'ip':inactive_node['primary_ip'], 'active_neighbors': active_neighbors}, room=room)
 	else:
 		print(TRED + "No active neighbors", ENDC)
 
-def update_node(status, node_id, new_virtual_ip):
-	if status:
-		print(TGREEN + "updating secondary IP of " + userlist['node_id'] + "to " + new_virtual_ip, ENDC)
-		userlist['node_id']['secondary_ip'] = new_virtual_ip
+
+@socketio.on('update node')
+def update_node(json):
+	if 'secondary_ip' in json:
+		node_id = json['NODE_ID']
+		secondary_ip = json['secondary_ip']
+		print(TGREEN + "updating secondary IP of " + str(node_id) + "to " + secondary_ip, ENDC)
+		userlist[node_id]['secondary_ip'] = secondary_ip
+		print(TGREEN + "Recovery Success with new Virtual IP as: " + userlist[node_id]['secondary_ip'], ENDC)
+	else:
+		active_neighbors = json['active_neighbors']
+		recovery_ip = json['ip']
+		print(active_neighbors)
+		active_neighbors.remove(str(json['recovery_node']))
+		print(TRED + "recovery failed", ENDC)
+		print(json['active_neighbors'])
+		if active_neighbors:
+			new_recovery_node = active_neighbors[0]
+			print("Assigning " + new_recovery_node + " for recovery")
+			emit("recover", {'disconnected_node': new_recovery_node, 'ip':json['ip'], 'active_neighbors': active_neighbors}, room=room)
+		else:
+			print(TRED + "All failover attempts failed.", ENDC)
 
 
 @socketio.on('join')
@@ -84,7 +98,7 @@ def disconnected():
 @socketio.on('ping')
 def handle_app_ping():
 	NODE_ID = sid_mapper[request.sid]
-	print(TGREEN + 'received ping from node: '+ str(NODE_ID), ENDC)
+	print(TLOAD + 'received ping from node: '+ str(NODE_ID), ENDC)
 
 
 ############################## 
