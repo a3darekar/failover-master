@@ -10,7 +10,7 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam par
 ### Install python
 
 - For Windows:
-1. Download Installer for python 3 from [here](https://www.python.org/downloads/windows/) and Install python 3 (preferably version 3.7 or higher)
+1. Download Installer from [here](https://www.python.org/downloads/windows/) and Install python 3 (preferably version 3.7 or higher)
 2. Follow [this guide](https://www.howtogeek.com/197947/how-to-install-python-on-windows/) in case of any issues. 
 3. Check if installation is successful by running given command in command prompt.
 	'python3 –version'
@@ -26,9 +26,12 @@ pip is the reference Python package manager. It’s used to install and update p
 
 - For Windows:
 1. Windows Installer for Python include pip by default. To verify the version, use 
-'py -m pip --version'
+
+	'py -m pip --version'
+
 2. You can make sure that pip is up-to-date by running:
-'py -m pip install --upgrade pip' 
+
+	'py -m pip install --upgrade pip' 
 
 ### Install virtualenv using pip
 
@@ -144,4 +147,5 @@ This program generates 2 distinct logs.
 	5. CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
 
 ### Format followed by the loggers is:
-	'[TIMESTAMP] : [LOG LEVEL] - [Message]'
+
+	'[TIMESTAMP] - [LOGGERNAME] - [LOG LEVEL] - [Message]'

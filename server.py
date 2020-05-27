@@ -15,7 +15,7 @@ logging.getLogger('engineio').setLevel(logging.ERROR)
 
 logger = logging.getLogger('operations')
 fileHandler = logging.FileHandler('operations.log')
-formatter = logging.Formatter('[%(asctime)s] - [%(name)s] - [%(levelname)s] - %(message)s')
+formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] - %(message)s')
 fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
 logger.setLevel(logging.INFO)
