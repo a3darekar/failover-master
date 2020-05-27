@@ -1,30 +1,49 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, redirect, url_for
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
+import logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
-socketio = SocketIO(app, logger=True)
+socketio = SocketIO(app)
 userlist = dict()
 inactive_list = dict()
-TGREEN = '\033[32m' # Green Text
-TLOAD = '\033[33m'
-TRED = '\033[31m' # Red Text
-ENDC = '\033[m'
 sid_mapper = {}
 
+logging.getLogger('socketio').setLevel(logging.ERROR)
+logging.getLogger('engineio').setLevel(logging.ERROR)
 
-def messageReceived(data):
-	print('message was received!!!')
-	print(data)
+logger = logging.getLogger('operations')
+fileHandler = logging.FileHandler('operations.log')
+formatter = logging.Formatter('[%(asctime)s] - [%(name)s] - [%(levelname)s] - %(message)s')
+fileHandler.setFormatter(formatter)
+logger.addHandler(fileHandler)
+logger.setLevel(logging.info)
+
+pingLogger = logging.getLogger('ping')
+pingFileHandler = logging.FileHandler('ping.log')
+pingFileHandler.setFormatter(formatter)
+pingLogger.addHandler(pingFileHandler)
+pingLogger.setLevel(logging.INFO)
+
+ch = logging.StreamHandler() 			# Console Log Handler
+ch.setLevel(logging.INFO)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+pingLogger.addHandler(ch)
+
+
+@socketio.on('ping')
+def handle_ping(timestamp):
+	NODE_ID = sid_mapper[request.sid]
+	pingLogger.info("Received alive ping from node %s", NODE_ID)
 
 
 ############################
 #	Operations
 ############################
 def find_neighbors(NODE_ID, inactive_node):
-	print(TRED + "Node " + str(NODE_ID) + " disconnected", ENDC)
-	print(TLOAD + "Looking up neighbors...", ENDC)
+	logger.critical("Node %s disconnected. Looking up neighbors for recovery", NODE_ID)
 	neighbors = inactive_node['neighbors'].copy()
 	active_neighbors = []
 	for neighbor in neighbors:
@@ -33,17 +52,13 @@ def find_neighbors(NODE_ID, inactive_node):
 			if not neighbor_node['secondary_ip']:
 				active_neighbors.append(neighbor)
 	if active_neighbors:
-		print(TGREEN + "Found neighbors :")
-		for neighbor in active_neighbors:
-			print(neighbor, end=' ')
-		print(ENDC)
 		elected_id = active_neighbors[0]
 		elected_node = userlist.get(int(elected_id))
-		print("Assigning " + elected_id + " for recovery")
+		logger.info("Found neighbors : %s. Assigning %s for recovery", active_neighbors, elected_id)
 		room = elected_node['sid']
 		emit("recover", {'disconnected_node': NODE_ID, 'recovery_node': elected_id, 'ip':inactive_node['primary_ip'], 'active_neighbors': active_neighbors}, room=room)
 	else:
-		print(TRED + "No active neighbors", ENDC)
+		logger.critical("No active neighbors found")
 
 
 @socketio.on('update node')
@@ -51,22 +66,22 @@ def update_node(json):
 	if 'secondary_ip' in json:
 		node_id = json['NODE_ID']
 		secondary_ip = json['secondary_ip']
-		print(TGREEN + "updating secondary IP of " + str(node_id) + "to " + secondary_ip, ENDC)
 		userlist[node_id]['secondary_ip'] = secondary_ip
-		print(TGREEN + "Recovery Success with new Virtual IP as: " + userlist[node_id]['secondary_ip'], ENDC)
+		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating IP in records", node_id, userlist[node_id]['secondary_ip'])
 	else:
+		disconnected_node = json['disconnected_node']
 		active_neighbors = json['active_neighbors']
 		recovery_ip = json['ip']
-		print(active_neighbors)
 		active_neighbors.remove(str(json['recovery_node']))
-		print(TRED + "recovery failed", ENDC)
-		print(json['active_neighbors'])
+		logger.warning("recovery failed. Refined active list is: %s", json['active_neighbors'])
 		if active_neighbors:
-			new_recovery_node = active_neighbors[0]
-			print("Assigning " + new_recovery_node + " for recovery")
-			emit("recover", {'disconnected_node': new_recovery_node, 'ip':json['ip'], 'active_neighbors': active_neighbors}, room=room)
+			recovery_node_id = active_neighbors[0]
+			logger.info("Assigning %s for recovery", recovery_node_id)
+			recovery_node = userlist[int(recovery_node_id)]
+			room = recovery_node['sid']
+			emit("recover", {'disconnected_node': disconnected_node, 'recovery_node': recovery_node_id, 'ip':json['ip'], 'active_neighbors': active_neighbors}, room=room)
 		else:
-			print(TRED + "All failover attempts failed.", ENDC)
+			logger.critical("All failover recovery attempts failed")
 
 
 @socketio.on('join')
@@ -79,10 +94,10 @@ def welcome_call(json):
 		inactive_list.pop(connection_id)
 		userlist[connection_id] = json
 
-		print(TGREEN + '{0} has rejoined  with data: {1}'.format(request.sid, json), ENDC)
+		logger.info('{0} has rejoined with Node ID: {1}'.format(request.sid, connection_id))
 		return True
 	# emit('join call', {'message': '{0} has joined'.format(request.sid)}, broadcast=True)
-	print(TGREEN + '{0} has joined  with data: {1}'.format(request.sid, json), ENDC)
+	logger.info('{0} has joined with Node ID: {1}'.format(request.sid, connection_id))
 	userlist[connection_id] = json
 	return True
 
@@ -96,15 +111,11 @@ def disconnected():
 	userlist.pop(NODE_ID)
 
 
-@socketio.on('ping')
-def handle_ping(timestamp):
-	NODE_ID = sid_mapper[request.sid]
-	print(TLOAD + str(timestamp) + ': Received alive ping from node '+ str(NODE_ID), ENDC)
-
-
-############################## 
-#	Flask server methods
-##############################
+""" 
+	Flask server methods. Use brower to access each of these methods.
+	'/' 		=> index method: Displays lists of active nodes as well as inactive nodes.
+	'/clear' 	=> clear method. used to clear all inactive node records from the system memeory.
+"""
 @app.route('/')
 def index():
 	# emit('my event', {'title': "Ping to all users", 'hello': "received slack message"}, namespace='/', broadcast=True)
@@ -114,11 +125,13 @@ def index():
 
 @app.route('/clear')
 def clear_lists():
-	userlist.clear()
 	inactive_list.clear()
-	return "Success"
+	return redirect(url_for("index"))
 
 
 if __name__ == '__main__':
-	print(TGREEN + "recovery server active", ENDC)
+	logger = logging.getLogger("operations")
+	pingLogger = logging.getLogger("ping")
+
+	logger.info("recovery server active")
 	socketio.run(app)
