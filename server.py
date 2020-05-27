@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, Response
 from flask_socketio import SocketIO, send, emit
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
-socketio = SocketIO(app, logger=True, engineio_logger=True)
+socketio = SocketIO(app, logger=True)
 userlist = dict()
 inactive_list = dict()
 TGREEN = '\033[32m' # Green Text
@@ -96,9 +97,9 @@ def disconnected():
 
 
 @socketio.on('ping')
-def handle_app_ping():
+def handle_ping(timestamp):
 	NODE_ID = sid_mapper[request.sid]
-	print(TLOAD + 'received ping from node: '+ str(NODE_ID), ENDC)
+	print(TLOAD + str(timestamp) + ': Received alive ping from node '+ str(NODE_ID), ENDC)
 
 
 ############################## 
