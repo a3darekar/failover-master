@@ -148,4 +148,4 @@ This program generates 2 distinct logs.
 
 ### Format followed by the loggers is:
 
-	'[TIMESTAMP] - [LOGGERNAME] - [LOG LEVEL] - [Message]'
+	'[TIMESTAMP] [LOGGERNAME] [LOG LEVEL] - [Message]'
