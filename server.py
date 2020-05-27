@@ -18,7 +18,7 @@ fileHandler = logging.FileHandler('operations.log')
 formatter = logging.Formatter('[%(asctime)s] - [%(name)s] - [%(levelname)s] - %(message)s')
 fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
-logger.setLevel(logging.info)
+logger.setLevel(logging.INFO)
 
 pingLogger = logging.getLogger('ping')
 pingFileHandler = logging.FileHandler('ping.log')
