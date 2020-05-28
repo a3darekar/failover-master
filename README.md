@@ -110,21 +110,43 @@ To install requrirements from requirements file, run:
 
 ### Execute Application script:
 
-After successfully installing all requirements, run the application:
+After successfully installing all requirements, proceed to run the application.
+To do this, you can either use the flask command or python’s -m switch with Flask. Before you can do that you need to tell your terminal the application to work with by exporting the FLASK_APP environment variable:
 
-On Windows:
+	$ export FLASK_APP=hello.py
+	$ flask run
+	 * Running on http://127.0.0.1:5000/
 
-	'py server.py'
+If you are on Windows, the environment variable syntax depends on command line interpreter. On Command Prompt:
 
-On MacOS and Linux:
+	C:\path\to\app>set FLASK_APP=hello.py
 
-	'python server.py'
+And on PowerShell:
 
-	OR 
+	PS C:\path\to\app> $env:FLASK_APP = "hello.py"
 
-	'python3 server.py'
+Alternatively you can use *python -m flask:*
+
+	$ export FLASK_APP=hello.py
+	$ python -m flask run
+	 * Running on http://127.0.0.1:5000/
+
+This launches a very simple builtin server, which is good enough for testing but probably not what you want to use in production. For deployment options see Deployment Options.
+
+Now head over to http://127.0.0.1:5000/ to see index page.
+
+### Visibility over Network
+
+By default Flask server is only accessible from your own computer, not from any other in the network. To make Server available over network, simply add *'--host=0.0.0.0'* to the command line.
+
+	$ flask run --host=0.0.0.0
+
+This tells your operating system to listen on all public IPs.
+
+NOTE: This type of execution is to be performed on the development process and you need to follow deployment guide below to deploy Flask application on your system.
 
 ----
+
 ## Deployment steps:
 
 To be added.
