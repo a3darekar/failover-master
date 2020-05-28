@@ -11,7 +11,7 @@ socketio = SocketIO(app)
 userlist = dict()
 inactive_list = dict()
 sid_mapper = {}
-recovery_nodes_mapper = {}
+recovery_node_mapper = {}
 
 logging.getLogger('socketio').setLevel(logging.ERROR)
 logging.getLogger('engineio').setLevel(logging.ERROR)
@@ -73,10 +73,9 @@ def update_node(json):
 		secondary_netmask = json['secondary_netmask']
 		userlist[node_id]['secondary_ip'] = secondary_ip
 		userlist[node_id]['secondary_netmask'] = secondary_netmask
-		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating IP in records", node_id, userlist[node_id]['secondary_ip'])
+		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating records...", node_id, userlist[node_id]['secondary_ip'])
 		disconnected_node = json['disconnected_node']
-		recovery_nodes_mapper.update({disconnected_node: node_id})
-		print(recovery_nodes_mapper)
+		recovery_node_mapper.update({disconnected_node: node_id})
 	else:
 		disconnected_node = json['disconnected_node']
 		active_neighbors = json['active_neighbors']
@@ -93,23 +92,37 @@ def update_node(json):
 			logger.critical("All failover recovery attempts failed")
 
 
+@socketio.on('restore node')
+def restore_node(json):
+	if json['status']:
+		node_id = json['NODE_ID']
+		secondary_ip = json['secondary_ip']
+		secondary_netmask = json['secondary_netmask']
+		userlist[node_id]['secondary_ip'] = secondary_ip
+		userlist[node_id]['secondary_netmask'] = secondary_netmask
+		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating records...", node_id, userlist[node_id]['secondary_ip'])
+		restore_node_id = json['restore_node']
+		recovery_node_mapper.pop(int(restore_node_id))
+	else:
+		logger.critical("IP restoration attempts failed")
+
+
 @socketio.on('join')
 def welcome_call(json):
 	json['sid'] = request.sid
 	connection_id = int(json['NODE_ID'])
-	# connection_id = json['mac']
 	sid_mapper.update({request.sid: connection_id})
 	if connection_id in inactive_list.keys():
 		inactive_list.pop(connection_id)
 		userlist[connection_id] = json
 
 		logger.info('Node {0} has rejoined with session ID: {1}'.format(connection_id, request.sid))
-		if connection_id in recovery_nodes_mapper:
+		if connection_id in recovery_node_mapper:
 			logger.warning('Attempting restoration of IP...')
-			recovery_node_id = recovery_nodes_mapper[connection_id]
+			recovery_node_id = recovery_node_mapper[connection_id]
 			recovery_node = userlist[int(recovery_node_id)]
 			room = recovery_node['sid']
-			emit("restore", {'restore_node': connection_id, 'ip':json['ip']}, room=room)
+			emit("restore", {'restore_node': connection_id}, room=room)
 		return
 	logger.info('Node {0} has joined with session ID: {1}'.format(connection_id, request.sid))
 	userlist[connection_id] = json
@@ -119,6 +132,9 @@ def welcome_call(json):
 @socketio.on('disconnect')
 def disconnected():
 	NODE_ID = sid_mapper[request.sid]
+	for k in recovery_node_mapper.copy():
+		if recovery_node_mapper[k] == NODE_ID:
+			del recovery_node_mapper[k]
 	inactive_node =	userlist.get(NODE_ID)
 	find_neighbors(NODE_ID, inactive_node)
 	inactive_list.update({NODE_ID: inactive_node})
@@ -133,7 +149,7 @@ def disconnected():
 @app.route('/')
 def index():
 	# emit('my event', {'title': "Ping to all users", 'hello': "received slack message"}, namespace='/', broadcast=True)
-	registered_users = {'active': userlist, 'inactive': inactive_list, 'recovery mapper': recovery_nodes_mapper}
+	registered_users = {'active': userlist, 'inactive': inactive_list, 'recovery mapper': recovery_node_mapper}
 	return registered_users
 
 
