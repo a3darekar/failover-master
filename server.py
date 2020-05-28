@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, Response, redirect, url_for
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
-import logging
+import os, logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
+debug_setting = os.environ.get('DEBUG', False)
+
 socketio = SocketIO(app)
 userlist = dict()
 inactive_list = dict()
@@ -12,6 +14,7 @@ sid_mapper = {}
 
 logging.getLogger('socketio').setLevel(logging.ERROR)
 logging.getLogger('engineio').setLevel(logging.ERROR)
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger('operations')
 fileHandler = logging.FileHandler('operations.log')
@@ -127,6 +130,8 @@ def index():
 
 @app.route('/clear')
 def clear_lists():
+	flask_logger = logging.getLogger('werkzeug')
+	flask_logger.error("Deleting inactive Nodes")
 	inactive_list.clear()
 	return redirect(url_for("index"))
 
@@ -136,4 +141,4 @@ if __name__ == '__main__':
 	pingLogger = logging.getLogger("ping")
 
 	logger.info("recovery server active")
-	socketio.run(app)
+	socketio.run(app, debug = debug_setting)
