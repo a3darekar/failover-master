@@ -66,7 +66,9 @@ def update_node(json):
 	if 'secondary_ip' in json:
 		node_id = json['NODE_ID']
 		secondary_ip = json['secondary_ip']
+		network_info = json['additional_network_info']
 		userlist[node_id]['secondary_ip'] = secondary_ip
+		userlist[node_id]['additional_network_info'] = network_info
 		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating IP in records", node_id, userlist[node_id]['secondary_ip'])
 	else:
 		disconnected_node = json['disconnected_node']
