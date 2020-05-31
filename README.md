@@ -1,4 +1,4 @@
-# Failover Worker Script 
+# Failover Master Script 
 
 ## Introduction
 
