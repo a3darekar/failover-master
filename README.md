@@ -104,7 +104,7 @@ Your prompt will change to indicate that you are now operating within the virtua
 
 Download or clone this repository from github with the help of [this guide](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository). 
 
-Once completing the cloning of the repository, enter into the failover_worker directory and Create and activate a virtual Environment.
+Once completing the cloning of the repository, enter into the repository directory and Create and activate a virtual Environment.
 
 ### Step 4. Installing packages from repository requirements
 
