@@ -6,7 +6,19 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam par
 Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam pariatur omnis aliquid perspiciatis porro recusandae voluptatibus, magnam iusto, minus odit deserunt enim ipsa corrupti saepe totam at et ullam.
 
 ----
-##Implementation
+## Deploying Application
+
+In this guide, we will deploy the Python application built using the Flask microframework on Ubuntu. We will see how to set up the Gunicorn application server and how to launch the application and configure Nginx to act as a front-end reverse proxy.
+
+### Prerequisites
+
+Before starting this guide, you should have:
+
++ A server with Ubuntu 18.04 installed and a non-root user with sudo privileges. Follow our initial server setup guide for guidance.
++ A domain name configured to point to your server. You can purchase one on Namecheap or get one for free on Freenom. You can learn how to point domains to DigitalOcean by following the relevant documentation on domains and DNS. Be sure to create the following DNS records:
+	+ An A record with your_domain pointing to your server’s public IP address.
+	+ An A record with www.your_domain pointing to your server’s public IP address.
++ Familiarity with the WSGI specification, which the Gunicorn server will use to communicate with your Flask application. This discussion covers WSGI in more detail.
 
 ### Step 1. Install components from Linux Repositories. 
 
@@ -17,6 +29,53 @@ First, let’s update the local package index and install the packages that will
 	$ sudo apt update
 
 	$ sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools
+
+Similarly, we will also install Ngnix 
+
+	$ sudo apt install nginx
+
+Before testing Nginx, the firewall software needs to be adjusted to allow access to the service. Nginx registers itself as a service with ufw upon installation, making it straightforward to allow Nginx access.
+
+List the application configurations that ufw knows how to work with by typing:
+
+	$ sudo ufw app list
+
+You should get a listing of the application profiles:
+	Output
+	Available applications:
+	  Nginx Full
+	  Nginx HTTP
+	  Nginx HTTPS
+	  OpenSSH
+
+As you can see, there are three profiles available for Nginx:
+
++ *Nginx Full*: This profile opens both port 80 (normal, unencrypted web traffic) and port 443 (TLS/SSL encrypted traffic)
++ *Nginx HTTP*: This profile opens only port 80 (normal, unencrypted web traffic)
++ *Nginx HTTPS*: This profile opens only port 443 (TLS/SSL encrypted traffic)
+
+It is recommended that you enable the most restrictive profile that will still allow the traffic you’ve configured. Since we haven’t configured SSL for our server yet in this guide, we will only need to allow traffic on port 80.
+
+You can enable this by typing:
+
+	$ sudo ufw allow 'Nginx HTTP'
+
+You can verify the change by typing:
+
+	$ sudo ufw status
+
+You should see HTTP traffic allowed in the displayed output:
+
+	Output
+	Status: active
+
+	To                         Action      From
+	--                         ------      ----
+	OpenSSH                    ALLOW       Anywhere                  
+	Nginx HTTP                 ALLOW       Anywhere                  
+	OpenSSH (v6)               ALLOW       Anywhere (v6)             
+	Nginx HTTP (v6)            ALLOW       Anywhere (v6)
+
 
 After this, lets move on to creating virtual Environment for our project.
 
