@@ -205,7 +205,7 @@ Remember to replace the username and project paths with your own information:
 	Group=www-data
 	WorkingDirectory=/home/user/flask_failover_master
 	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
-	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --bind 0.0.0.0:5000 --worker-class eventlet -w 1 --bind unix:flask_failover_master.sock -m 007 wsgi:app
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind unix:flask_failover_master.sock -m 007 wsgi:app
 
 Finally, let’s add an `[Install]` section. This will tell systemd what to link this service to if we enable it to start at boot. We want this service to start when the regular multi-user system is up and running:
 
@@ -218,7 +218,7 @@ Finally, let’s add an `[Install]` section. This will tell systemd what to link
 	Group=www-data
 	WorkingDirectory=/home/user/flask_failover_master
 	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
-	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --bind unix:flask_failover_master.sock -m 007 wsgi:app
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind unix:flask_failover_master.sock -m 007 wsgi:app
 
 	[Install]
 	WantedBy=multi-user.target
