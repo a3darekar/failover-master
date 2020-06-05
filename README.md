@@ -8,151 +8,236 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam par
 ----
 ##Implementation
 
-### Install python
+### Step 1. Install components from Linux Repositories. 
 
-- For Windows:
-1. Download Installer from [here](https://www.python.org/downloads/windows/) and Install python 3 (preferably version 3.7 or higher)
-2. Follow [this guide](https://www.howtogeek.com/197947/how-to-install-python-on-windows/) in case of any issues. 
-3. Check if installation is successful by running given command in command prompt.
-	'python3 –version'
-4. If installed properly, The output should read installed version of python.
-5. **Note:** Run the command prompt as administer for executing this program.
+Our first step will be to install all of the pieces we need from the Ubuntu repositories. This includes pip, the Python package manager, which will manage our Python components. We will also get the Python development files necessary to build some of the Gunicorn components.
 
-- For Linux:
-1. Refer to [this guide](https://docs.python-guide.org/starting/install3/linux/) to install and verify python installation.
+First, let’s update the local package index and install the packages that will allow us to build our Python environment. These will include python3-pip, along with a few more packages and development tools necessary for a robust programming environment:
 
-### Install pip (package installer for python)
+	$ sudo apt update
 
-pip is the reference Python package manager. It’s used to install and update packages. You’ll need to make sure you have the latest version of pip installed.
+	$ sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools
 
-- For Windows:
-1. Windows Installer for Python include pip by default. To verify the version, use 
+After this, lets move on to creating virtual Environment for our project.
 
-	'py -m pip --version'
+### Step 2. Creating a Python Virtual Environment
 
-2. You can make sure that pip is up-to-date by running:
+Next, we’ll set up a virtual environment in order to isolate our Flask application from the other Python files on the system.
 
-	'py -m pip install --upgrade pip' 
+Start by installing the `python3-venv` package, which will install the `venv` module:
 
-### Install virtualenv using pip
+	$ sudo apt install python3-venv
 
-[virtualenv](https://packaging.python.org/key_projects/#virtualenv) is used to manage Python packages for different projects. Using virtualenv allows you to avoid installing Python packages globally which could break system tools or other projects. You can install virtualenv using pip.
+Create a virtual environment to store your Flask project’s Python requirements by typing:
 
-On Windows:
+	$ python3.6 -m venv flaskenv
 
-'py -m pip install --user virtualenv'
+This will install a local copy of Python and pip into a directory called flaskenv within your project directory.
 
-On macOS and Linux:
+Before installing applications within the virtual environment, you need to activate it. Do so by typing:
 
-'python3 -m pip install --user virtualenv'
+	$ source flaskenv/bin/activate
 
-### Clone the repository:
+Your prompt will change to indicate that you are now operating within the virtual environment. It will look something like this: 
+`(flaskenv)user@host:~/flask_failover_master$.`
 
-Download the repository from github with the help of [this guide](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository). Once completing the cloning of the repository, enter into the failover_worker directory and Create and activate a virtual Environment.
+### Step 3. Clone the repository.
 
-### Creating Virtual Environment
+Download or clone this repository from github with the help of [this guide](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository). 
 
-venv (For python2) and virtualenv (for python2) allow you to manage separate package installations for different projects. They essentially allow you to create a “virtual” isolated Python installation and install packages into that virtual installation.
+Once completing the cloning of the repository, enter into the failover_worker directory and Create and activate a virtual Environment.
 
-To create a virtual environment, go to your project’s directory and run venv. If you are using Python 2, replace venv with virtualenv in the below commands.
+### Step 4. Installing packages from repository requirements
 
-On macOS and Linux:
+Now that you are in your virtual environment, you can install Flask and Gunicorn and get started on designing your application.
 
-'python3 -m venv env'
+First, let’s install `wheel` with the local instance of pip to ensure that our packages will install even if they are missing wheel archives:
 
-or
+	$ pip install wheel
 
-'python -m virtualenv env'
+Next, let’s install all requirements from `requirements.txt`:
 
-On Windows:
+	$ pip install -r requirements.txt
 
-'py -m venv env'
+### Step 5. Test execution of application script
 
-The second argument is the location to create the virtual environment. Generally, you can just create this in your project and call it env.
+After successfully installing all requirements, proceed to run the application with `flask run` command.
 
-venv will create a virtual Python installation in the env folder.
-
-### Activating Virtual Environment
-
-Before you can start installing or using packages in your virtual environment you’ll need to activate it. Activating a virtual environment will put the virtual environment-specific python and pip executables into your shell’s PATH.
-
-After entering  
-
-On macOS and Linux:
-
-'source env/bin/activate'
-
-On Windows:
-
-'.\env\Scripts\activate'
-
-### Leaving Virtual Environment
-
-To leave virtual environment, simply run:
-'deactivate'
-
-### Installing packages
-
-Once you activate virtual environment, you can proceed to install packages. For example, to install requests library, run:
-
-'pip install requests'
-
-or for specific version:
-
-'pip install requests==2.18.4'
-
-As we already have all requirements specified in the requirements.txt file, we will skip this part and install requirements from 'requirements.txt'
-
-### Using requirements files:
-
-To install requrirements from requirements file, run:
-
-'pip install -r requirements.txt'
-
-### Execute Application script:
-
-After successfully installing all requirements, proceed to run the application.
-To do this, you can either use the flask command or python’s -m switch with Flask. Before you can do that you need to tell your terminal the application to work with by exporting the FLASK_APP environment variable:
-
-	$ export FLASK_APP=hello.py
 	$ flask run
 	 * Running on http://127.0.0.1:5000/
 
-If you are on Windows, the environment variable syntax depends on command line interpreter. On Command Prompt:
-
-	C:\path\to\app>set FLASK_APP=hello.py
-
-And on PowerShell:
-
-	PS C:\path\to\app> $env:FLASK_APP = "hello.py"
-
 Alternatively you can use *python -m flask:*
 
-	$ export FLASK_APP=hello.py
 	$ python -m flask run
 	 * Running on http://127.0.0.1:5000/
 
-This launches a very simple builtin server, which is good enough for testing but probably not what you want to use in production. For deployment options see Deployment Options.
-
 Now head over to http://127.0.0.1:5000/ to see index page.
 
-### Visibility over Network
+This launches a very simple builtin server, which is good enough for testing but probably not what you want to use in production. For deployment options see Deployment Options.
 
-By default Flask server is only accessible from your own computer, not from any other in the network. To make Server available over network, simply add *'--host=0.0.0.0'* to the command line.
+### Step 6. Visibility over Network
 
-	$ flask run --host=0.0.0.0
+By default Flask server is only accessible from your own computer, not from any other in the network. To make Server available over network, we will run the application with gunicorn worker.
 
-This tells your operating system to listen on all public IPs.
+	$ gunicorn --bind 0.0.0.0:5000 --worker-class eventlet -w 1 wsgi:app
 
-NOTE: This type of execution is to be performed on the development process and you need to follow deployment guide below to deploy Flask application on your system.
+You should see output like the following:
+
+	Output
+	[2020-06-05 12:22:34 +0530] [28217] [INFO] Starting gunicorn 20.0.4
+	[2020-06-05 12:22:34 +0530] [28217] [INFO] Listening at: http://0.0.0.0:5000 (28217)
+	[2020-06-05 12:22:34 +0530] [28217] [INFO] Using worker: sync
+	[2020-06-05 12:22:34 +0530] [28220] [INFO] Booting worker with pid: 28220
+
+This tells your operating system to listen on all public IPs at 5000 port.
+
+Visit your server’s IP address with `:5000` appended to the end in your web browser again:
+
+	http://your_server_ip:5000
+
+When you have confirmed that it’s functioning properly, press `CTRL-C` in your terminal window.
+
+We’re now done with our virtual environment, so we can deactivate it:
+
+	(flaskenv) $ deactivate
+
+Any Python commands will now use the system’s Python environment again.
+
+### Step 7. Create systemd service file
+
+Next, let’s create the systemd service unit file. Creating a systemd unit file will allow Ubuntu’s init system to automatically start Gunicorn and serve the Flask application whenever the server boots.
+
+Create a unit file ending in `.service` within the `/etc/systemd/system` directory to begin:
+
+	sudo nano /etc/systemd/system/flask_failover.service
+
+Inside, we’ll start with the [Unit] section, which is used to specify metadata and dependencies. Let’s put a description of our service here and tell the init system to only start this after the networking target has been reached:
+
+	[Unit]
+	Description=Gunicorn instance to serve flask_failover_master
+	After=network.target
+
+Next, let’s open up the `[Service]` section. This will specify the user and group that we want the process to run under. Let’s give our regular user account ownership of the process since it owns all of the relevant files. Let’s also give group ownership to the `www-data` group so that `Nginx` can communicate easily with the Gunicorn processes. Remember to replace the username here with your username:
+
+	[Unit]
+	Description=Gunicorn instance to serve flask_failover_master
+	After=network.target
+
+	[Service]
+	User=user
+	Group=www-data
+
+Next, let’s map out the working directory and set the `PATH` environmental variable so that the init system knows that the executables for the process are located within our virtual environment. Let’s also specify the command to start the service. This command will do the following:
+
+- Start 3 worker processes (though you should adjust this as necessary)
+- Create and bind to a Unix socket file, flask_failover_master.sock, within our project directory. We’ll set an umask value of 007 so that the socket file is created giving access to the owner and group, while restricting other access
+- Specify the WSGI entry point file name, along with the Python callable within that file (`wsgi:app`)
+
+Systemd requires that we give the full path to the Gunicorn executable, which is installed within our virtual environment.
+
+Remember to replace the username and project paths with your own information:
+
+	[Unit]
+	Description=Gunicorn instance to serve flask_failover_master
+	After=network.target
+
+	[Service]
+	User=user
+	Group=www-data
+	WorkingDirectory=/home/user/flask_failover_master
+	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007 wsgi:app
+
+Finally, let’s add an `[Install]` section. This will tell systemd what to link this service to if we enable it to start at boot. We want this service to start when the regular multi-user system is up and running:
+
+	[Unit]
+	Description=Gunicorn instance to serve flask_failover_master
+	After=network.target
+
+	[Service]
+	User=user
+	Group=www-data
+	WorkingDirectory=/home/user/flask_failover_master
+	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --bind unix:flask_failover_master.sock -m 007 wsgi:app
+
+	[Install]
+	WantedBy=multi-user.target
+
+
+With that, our systemd service file is complete. Save and close it now.
+
+We can now start the Gunicorn service we created and enable it so that it starts at boot:
+
+	sudo systemctl start flask_failover_master
+	sudo systemctl enable flask_failover_master
+
+Let’s check the status:
+
+	sudo systemctl status flask_failover_master
+	
+You should see output like this:
+
+	Output
+	● flask_failover_master.service - Gunicorn instance to serve flask_failover_master
+	   Loaded: loaded (/etc/systemd/system/flask_failover_master.service; enabled; vendor preset: enabled)
+	   Active: active (running) since Fri 2018-07-13 14:28:39 UTC; 46s ago
+	 Main PID: 28232 (gunicorn)
+		Tasks: 4 (limit: 1153)
+	   CGroup: /system.slice/flask_failover_master.service
+			├─28232 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
+			├─28250 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
+			├─28251 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
+			└─28252 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
+If you see any errors, be sure to resolve them before continuing with the tutorial.
+
+### Step 8. Configuring Nginx to Proxy Requests
+
+Our Gunicorn application server should now be up and running, waiting for requests on the socket file in the project directory. Let’s now configure Nginx to pass web requests to that socket by making some small additions to its configuration file.
+
+Begin by creating a new server block configuration file in Nginx’s sites-available directory. Let’s call this flask_failover_master to keep in line with the rest of the guide:
+
+	sudo nano /etc/nginx/sites-available/flask_failover_master
+
+Open up a server block and tell Nginx to listen on the default port 80. Let’s also tell it to use this block for requests for our server’s domain name:
+
+	server {
+		listen 80;
+		server_name your_domain www.your_domain;
+	}
+
+Next, let’s add a location block that matches every request. Within this block, we’ll include the proxy_params file that specifies some general proxying parameters that need to be set. We’ll then pass the requests to the socket we defined using the proxy_pass directive:
+
+	server {
+		listen 80;
+		server_name your_domain www.your_domain;
+
+		location / {
+			include proxy_params;
+			proxy_pass http://unix:/home/user/flask_failover_master/flask_failover_master.sock;
+		}
+	}
+Save and close the file when you’re finished.
+
+To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
+
+sudo ln -s /etc/nginx/sites-available/flask_failover_master /etc/nginx/sites-enabled
+With the file in that directory, you can test for syntax errors:
+
+sudo nginx -t
+If this returns without indicating any issues, restart the Nginx process to read the new configuration:
+
+sudo systemctl restart nginx
+Finally, let’s adjust the firewall. We can then allow full access to the Nginx server:
+
+	sudo ufw allow 'Nginx Full'
+
+You should now be able to navigate to your server’s domain name in your web browser:
+
+http://your_domain
 
 ----
 
-## Deployment steps:
-
-To be added.
-
-----
 ## Logging functionality:
 
 Logging is a means of tracking events that happen when some software runs. The logging calls are added to the code to indicate that certain events have occurred. An event is described by a descriptive message which can optionally contain variable data (i.e. data that is potentially different for each occurrence of the event). Events also have an importance which the developer ascribes to the event; the importance can also be called the level or severity.
