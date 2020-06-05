@@ -5,7 +5,6 @@ import os, logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
-debug_setting = os.environ.get('DEBUG', False)
 
 socketio = SocketIO(app)
 userlist = dict()
@@ -160,10 +159,3 @@ def clear_lists():
 	inactive_list.clear()
 	return redirect(url_for("index"))
 
-
-if __name__ == '__main__':
-	logger = logging.getLogger("operations")
-	pingLogger = logging.getLogger("ping")
-
-	logger.info("recovery server active")
-	socketio.run(app, debug = debug_setting)
