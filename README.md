@@ -175,7 +175,7 @@ We can now start the Gunicorn service we created and enable it so that it starts
 Let’s check the status:
 
 	sudo systemctl status flask_failover_master
-	
+
 You should see output like this:
 
 	Output
@@ -221,20 +221,27 @@ Save and close the file when you’re finished.
 
 To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
 
-sudo ln -s /etc/nginx/sites-available/flask_failover_master /etc/nginx/sites-enabled
+	sudo ln -s /etc/nginx/sites-available/flask_failover_master /etc/nginx/sites-enabled
+
 With the file in that directory, you can test for syntax errors:
 
-sudo nginx -t
+	sudo nginx -t
+
 If this returns without indicating any issues, restart the Nginx process to read the new configuration:
 
-sudo systemctl restart nginx
+	sudo systemctl restart nginx
+
 Finally, let’s adjust the firewall. We can then allow full access to the Nginx server:
 
 	sudo ufw allow 'Nginx Full'
 
-You should now be able to navigate to your server’s domain name in your web browser:
+You should now be able to navigate to your server’s IP or domain name in your web browser:
 
-http://your_domain
+	http://IP_address
+
+OR
+
+	http://your_domain
 
 ----
 
