@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, Response, redirect, url_for
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
 import os, logging
+from logger_config import logger, pingLogger
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
@@ -11,29 +12,6 @@ userlist = dict()
 inactive_list = dict()
 sid_mapper = {}
 recovery_node_mapper = {}
-
-logging.getLogger('socketio').setLevel(logging.ERROR)
-logging.getLogger('engineio').setLevel(logging.ERROR)
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-
-logger = logging.getLogger('operations')
-fileHandler = logging.FileHandler('operations.log')
-formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] - %(message)s')
-fileHandler.setFormatter(formatter)
-logger.addHandler(fileHandler)
-logger.setLevel(logging.INFO)
-
-pingLogger = logging.getLogger('ping')
-pingFileHandler = logging.FileHandler('ping.log')
-pingFileHandler.setFormatter(formatter)
-pingLogger.addHandler(pingFileHandler)
-pingLogger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler() 			# Console Log Handler
-ch.setLevel(logging.INFO)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-pingLogger.addHandler(ch)
 
 
 @socketio.on('ping')
@@ -159,3 +137,8 @@ def clear_lists():
 	inactive_list.clear()
 	return redirect(url_for("index"))
 
+if __name__ == "__main__":
+	gunicorn_logger = logging.getLogger('gunicorn.error')
+	logger.handlers = gunicorn_logger.handlers
+	logger.info("recovery server active")
+	socketio.run(app)

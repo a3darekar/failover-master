@@ -1,9 +1,8 @@
-from server import app, socketio, logger, pingLogger
-
+from logger_config import logger, pingLogger
+from server import socketio, app
 
 if __name__ == "__main__":
-	logger = logging.getLogger("operations")
-	pingLogger = logging.getLogger("ping")
-
+	gunicorn_logger = logging.getLogger('gunicorn.error')
+	logger.handlers = gunicorn_logger.handlers
 	logger.info("recovery server active")
 	socketio.run(app)
