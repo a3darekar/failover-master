@@ -189,7 +189,7 @@ Next, let’s open up the `[Service]` section. This will specify the user and gr
 Next, let’s map out the working directory and set the `PATH` environmental variable so that the init system knows that the executables for the process are located within our virtual environment. Let’s also specify the command to start the service. This command will do the following:
 
 - Start 3 worker processes (though you should adjust this as necessary)
-- Create and bind to a Unix socket file, flask_failover_master.sock, within our project directory. We’ll set an umask value of 007 so that the socket file is created giving access to the owner and group, while restricting other access
+- Bind the process to a system port (e.g. 5000).
 - Specify the WSGI entry point file name, along with the Python callable within that file (`wsgi:app`)
 
 Systemd requires that we give the full path to the Gunicorn executable, which is installed within our virtual environment.
@@ -205,7 +205,7 @@ Remember to replace the username and project paths with your own information:
 	Group=www-data
 	WorkingDirectory=/home/user/flask_failover_master
 	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
-	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind unix:flask_failover_master.sock -m 007 wsgi:app
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind :5000 -m 007 wsgi:app
 
 Finally, let’s add an `[Install]` section. This will tell systemd what to link this service to if we enable it to start at boot. We want this service to start when the regular multi-user system is up and running:
 
@@ -218,7 +218,7 @@ Finally, let’s add an `[Install]` section. This will tell systemd what to link
 	Group=www-data
 	WorkingDirectory=/home/user/flask_failover_master
 	Environment="PATH=/home/user/flask_failover_master/flaskenv/bin"
-	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind unix:flask_failover_master.sock -m 007 wsgi:app
+	ExecStart=/home/user/flask_failover_master/flaskenv/bin/gunicorn --worker-class eventlet -w 1 --bind :5000 -m 007 wsgi:app
 
 	[Install]
 	WantedBy=multi-user.target
@@ -244,9 +244,9 @@ You should see output like this:
 	 Main PID: 28232 (gunicorn)
 		Tasks: 4 (limit: 1153)
 	   CGroup: /system.slice/flask_failover_master.service
-			├─28232 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
-			├─28250 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
-			├─28251 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
+			├─28232 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind :5000 -m 007
+			├─28250 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind :5000 -m 007
+			├─28251 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind :5000 -m 007
 			└─28252 /home/user/flask_failover_master/flaskenv/bin/python3.6 /home/user/flask_failover_master/flaskenv/bin/gunicorn --workers 3 --bind unix:flask_failover_master.sock -m 007
 If you see any errors, be sure to resolve them before continuing with the tutorial.
 
@@ -273,9 +273,19 @@ Next, let’s add a location block that matches every request. Within this block
 
 		location / {
 			include proxy_params;
-			proxy_pass http://unix:/home/user/flask_failover_master/flask_failover_master.sock;
+			proxy_pass http://127.0.0.1:5000;
 		}
+
+		location /socket.io {
+	        include proxy_params;
+	        proxy_http_version 1.1;
+	        proxy_buffering off;
+	        proxy_set_header Upgrade $http_upgrade;
+	        proxy_set_header Connection "Upgrade";
+	        proxy_pass http://127.0.0.1:5000/socket.io;
+    	}
 	}
+	
 Save and close the file when you’re finished.
 
 To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:

@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve flask_failover_master
+After=network.target
+
+[Service]
+User=amey
+Group=www-data
+WorkingDirectory=/home/amey/projects/python/freelance_work/failover_master
+Environment="PATH=/home/amey/projects/python/freelance_work/failover_master/env/bin"
+ExecStart=/home/amey/projects/python/freelance_work/failover_master/env/bin/gunicorn --worker-class eventlet -w 1 --bind :5000 --access-logfile '-' -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
