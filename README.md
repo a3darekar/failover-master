@@ -2,8 +2,7 @@
 
 ## Introduction
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam pariatur omnis aliquid perspiciatis porro recusandae voluptatibus, magnam iusto, minus odit deserunt enim ipsa corrupti saepe totam at et ullam.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio aperiam pariatur omnis aliquid perspiciatis porro recusandae voluptatibus, magnam iusto, minus odit deserunt enim ipsa corrupti saepe totam at et ullam.
+Distributed database replication - fault tolerance (DDR-FT) Deployment configures the worker nodes in DDR-FT system to be monitored for down-time and perform failover action accordingly to allow another node to take over the unavailable node’s processing load.
 
 ----
 ## Deploying Application
