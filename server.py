@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, Response, redirect, url_for
+from flask import Flask, render_template, request, Response, redirect, url_for, jsonify
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
 import os, logging
@@ -123,11 +123,16 @@ def disconnected():
 	'/' 		=> index method: Displays lists of active nodes as well as inactive nodes.
 	'/clear' 	=> clear method. used to clear all inactive node records from the system memeory.
 """
-@app.route('/')
+@app.route('/json')
 def index():
-	# emit('my event', {'title': "Ping to all users", 'hello': "received slack message"}, namespace='/', broadcast=True)
-	registered_users = {'active': userlist, 'inactive': inactive_list, 'recovery mapper': recovery_node_mapper}
-	return registered_users
+	registered_users = {'active': userlist, 'inactive': inactive_list, 'recovery_mapper': recovery_node_mapper}
+	return jsonify(registered_users)
+
+@app.route('/')
+def monitor():
+	context = {'active': userlist, 'inactive': inactive_list, 'recovery_mapper': recovery_node_mapper}
+	context = jsonify(context)
+	return render_template('index.html', context = context)
 
 
 @app.route('/clear')
