@@ -1,18 +1,18 @@
 from flask import Flask, render_template, request, Response, redirect, url_for, jsonify
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
-import os, logging
+import os, logging, time
 from logger_config import logger, pingLogger
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
 
 socketio = SocketIO(app)
-userlist = dict()
-inactive_list = dict()
+userlist = {}
+inactive_list = {}
 sid_mapper = {}
 recovery_node_mapper = {}
-
+recovery_init_time = {}
 
 @socketio.on('ping')
 def handle_ping(timestamp):
@@ -52,6 +52,8 @@ def update_node(json):
 		userlist[node_id]['secondary_netmask'] = secondary_netmask
 		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating records...", node_id, userlist[node_id]['secondary_ip'])
 		disconnected_node = json['disconnected_node']
+		recovery_time_delta = time.time() - recovery_init_time[disconnected_node]
+		logger.warning("Total time taken for node recovery: %.2f seconds", recovery_time_delta)
 		recovery_node_mapper.update({disconnected_node: node_id})
 	else:
 		disconnected_node = json['disconnected_node']
@@ -78,8 +80,10 @@ def restore_node(json):
 		userlist[node_id]['secondary_ip'] = secondary_ip
 		userlist[node_id]['secondary_netmask'] = secondary_netmask
 		logger.info("Recovery Success by node %s with new Virtual IP as: %s. Updating records...", node_id, userlist[node_id]['secondary_ip'])
-		restore_node_id = json['restore_node']
-		recovery_node_mapper.pop(int(restore_node_id))
+		restored_node = json['restore_node']
+		recovery_time_delta = time.time() - recovery_init_time[restored_node]
+		logger.warning("Total time taken for restoring IP: %.2f seconds", recovery_time_delta)
+		recovery_node_mapper.pop(int(restored_node))
 	else:
 		logger.critical("IP restoration attempts failed")
 
@@ -96,6 +100,7 @@ def welcome_call(json):
 		logger.info('Node {0} has rejoined with session ID: {1}'.format(connection_id, request.sid))
 		if connection_id in recovery_node_mapper:
 			logger.warning('Attempting restoration of IP...')
+			recovery_init_time[connection_id] = time.time()
 			recovery_node_id = recovery_node_mapper[connection_id]
 			recovery_node = userlist[int(recovery_node_id)]
 			room = recovery_node['sid']
@@ -113,6 +118,7 @@ def disconnected():
 		if recovery_node_mapper[k] == NODE_ID:
 			del recovery_node_mapper[k]
 	inactive_node =	userlist.get(NODE_ID)
+	recovery_init_time[NODE_ID] = time.time()
 	find_neighbors(NODE_ID, inactive_node)
 	inactive_list.update({NODE_ID: inactive_node})
 	userlist.pop(NODE_ID)
