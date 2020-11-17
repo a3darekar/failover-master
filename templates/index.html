@@ -222,7 +222,7 @@
 			},
 			methods: {
 				async init() {
-					response = await axios.get('http://localhost/json');
+					response = await axios.get(document.URL + '/json');
 					this.active = response.data.active;
 					this.inactive = response.data.inactive;
 					this.recovery_mapper = response.data.recovery_mapper;
